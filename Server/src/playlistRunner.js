@@ -25,6 +25,7 @@ const state = {
 
 let _timer = null;
 let _preTimers = [];  // timers for negative-delay track_change templates
+let _onStopCallback = null; // called when playlist stops (e.g. to cancel skip votes)
 
 // ── Public API ───────────────────────────────────────────────────────────────
 
@@ -86,16 +87,29 @@ function stopPlaylist() {
   state.nextChangeAt = null;
   if (wasRunning) {
     console.log('[playlist] Stopped');
+    if (_onStopCallback) _onStopCallback();
     _broadcastState();
   }
+}
+
+function onStop(callback) {
+  _onStopCallback = callback;
 }
 
 function skipToNext() {
   if (!state.running || state.tracks.length === 0) return;
   if (_timer) { clearTimeout(_timer); _timer = null; }
   _clearPreTimers();
+  const prevIndex = state.currentIndex;
   state.currentIndex = (state.currentIndex + 1) % state.tracks.length;
-  _applyCurrentTrack();
+  if (state.currentIndex === 0 && prevIndex !== 0) {
+    console.log(`[playlist] Wrapped from last track (${prevIndex + 1}/${state.tracks.length}) back to track 1`);
+  }
+  try {
+    _applyCurrentTrack();
+  } catch (err) {
+    console.error('[playlist] Error applying track after skip:', err.message);
+  }
   _scheduleNext();
   _broadcastState();
 }
@@ -142,7 +156,11 @@ function _scheduleNext() {
 
   _timer = setTimeout(() => {
     state.currentIndex = (state.currentIndex + 1) % state.tracks.length;
-    _applyCurrentTrack();
+    try {
+      _applyCurrentTrack();
+    } catch (err) {
+      console.error('[playlist] Error applying track during auto-advance:', err.message);
+    }
     _scheduleNext();
     _broadcastState();
   }, state.intervalMs);
@@ -166,4 +184,4 @@ function _broadcastState() {
   broadcast.broadcastAll({ event_type: 'playlist_state', ...getState() });
 }
 
-module.exports = { init, getState, startPlaylist, stopPlaylist, skipToNext, skipToIndex };
+module.exports = { init, getState, startPlaylist, stopPlaylist, skipToNext, skipToIndex, onStop };

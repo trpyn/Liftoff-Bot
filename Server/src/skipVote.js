@@ -88,8 +88,13 @@ function checkSkipVoteThreshold() {
   if (realPlayers === 0) return;
   if (skipVote.voters.size >= needed) {
     cancelSkipVote();
+    const { skipToNext, getState: getPlaylistState } = require('./playlistRunner');
+    if (!getPlaylistState().running) {
+      _sendCommand({ cmd: 'send_chat', message: '<color=#FF0000>SKIP</color> <color=#FFFF00>Vote passed but playlist has stopped.</color>' });
+      return;
+    }
     _sendCommand({ cmd: 'send_chat', message: '<color=#00FF00>VOTE PASSED</color> <color=#FFFF00>Skipping to next track...</color>' });
-    require('./playlistRunner').skipToNext();
+    skipToNext();
   }
 }
 
