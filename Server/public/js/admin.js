@@ -226,7 +226,7 @@ function renderAdminPlayers() {
     tbody.innerHTML = '<tr><td colspan="4" style="padding:1.5rem;text-align:center;color:#444;font-size:0.85rem">No players in lobby.</td></tr>';
     return;
   }
-  const rows = [...adminLobby.values()].sort((a, b) => a.actor - b.actor);
+  const rows = [...adminLobby.values()].filter(p => p.nick !== 'JMT_Bot').sort((a, b) => a.actor - b.actor);
   const warnedSet = new Set(_idleInfo.warned);
   const whitelistSet = new Set(_idleInfo.whitelist);
   tbody.innerHTML = '';
