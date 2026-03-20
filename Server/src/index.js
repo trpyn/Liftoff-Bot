@@ -14,6 +14,14 @@ const publicRoutes = require('./routes/public');
 // ── Database ────────────────────────────────────────────────────────────────
 initDatabase();
 
+// Auto-seed the first admin user from env vars (only when no users exist)
+const { getUserCount, createUser } = require('./database');
+const { hashPassword } = require('./auth');
+if (getUserCount() === 0 && process.env.ADMIN_USER && process.env.ADMIN_PASS) {
+  const user = createUser(process.env.ADMIN_USER, hashPassword(process.env.ADMIN_PASS));
+  console.log(`[auth] Auto-created admin user: ${user.username}`);
+}
+
 // ── HTTP + Express ──────────────────────────────────────────────────────────
 const app = express();
 app.use(express.json());

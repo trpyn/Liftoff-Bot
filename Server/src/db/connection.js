@@ -82,6 +82,14 @@ function initDatabase() {
       FOREIGN KEY (playlist_id) REFERENCES playlists(id) ON DELETE CASCADE
     );
 
+    CREATE TABLE IF NOT EXISTS admin_users (
+      id            INTEGER PRIMARY KEY AUTOINCREMENT,
+      username      TEXT NOT NULL UNIQUE COLLATE NOCASE,
+      password_hash TEXT NOT NULL,
+      role          TEXT NOT NULL DEFAULT 'admin',
+      created_at    TEXT NOT NULL DEFAULT (datetime('now'))
+    );
+
     CREATE INDEX IF NOT EXISTS idx_laps_race    ON laps(race_id);
     CREATE INDEX IF NOT EXISTS idx_laps_race_recorded ON laps(race_id, recorded_at);
     CREATE INDEX IF NOT EXISTS idx_laps_guid    ON laps(pilot_guid);
