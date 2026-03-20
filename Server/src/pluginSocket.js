@@ -105,6 +105,11 @@ function createPluginSocketServer(httpServer) {
   // Initialise the skip-vote module with access to sendCommand
   skipVote.init(sendCommand);
 
+  // Cancel any active skip vote when the playlist stops so orphaned votes
+  // don't cause "No playlist is running" on the next /skip attempt.
+  const playlist = require('./playlistRunner');
+  playlist.onStop(() => skipVote.cancelSkipVote());
+
   const wss = new WebSocketServer({ noServer: true });
 
   httpServer.on('upgrade', (req, socket, head) => {
