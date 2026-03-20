@@ -207,34 +207,69 @@ function connectWs() {
   };
 }
 
-// ── Players / Kick ─────────────────────────────────────────────────────────
+// ── Players / Kick / Idle ──────────────────────────────────────────────────
 const adminLobby = new Map(); // actor → { actor, nick }
+let _idleInfo = { idleTimes: {}, warned: [], whitelist: [] }; // cached idle data
+
+function fmtIdleTime(ms) {
+  if (ms == null) return '-';
+  const secs = Math.floor(ms / 1000);
+  if (secs < 60) return `${secs}s`;
+  const mins = Math.floor(secs / 60);
+  const rem = secs % 60;
+  return `${mins}m ${rem.toString().padStart(2, '0')}s`;
+}
 
 function renderAdminPlayers() {
   const tbody = document.getElementById('players-tbody');
   if (adminLobby.size === 0) {
-    tbody.innerHTML = '<tr><td colspan="3" style="padding:1.5rem;text-align:center;color:#444;font-size:0.85rem">No players in lobby.</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="4" style="padding:1.5rem;text-align:center;color:#444;font-size:0.85rem">No players in lobby.</td></tr>';
     return;
   }
   const rows = [...adminLobby.values()].sort((a, b) => a.actor - b.actor);
+  const warnedSet = new Set(_idleInfo.warned);
+  const whitelistSet = new Set(_idleInfo.whitelist);
   tbody.innerHTML = '';
   for (const p of rows) {
     const tr = document.createElement('tr');
+
+    // Pilot name
     const tdNick = document.createElement('td');
     tdNick.style.cssText = 'padding:0.6rem 1rem;font-size:0.9rem;border-bottom:1px solid #18181e';
     tdNick.textContent = p.nick;
+
+    // Actor ID
     const tdActor = document.createElement('td');
     tdActor.style.cssText = 'padding:0.6rem 1rem;font-size:0.85rem;color:#666;border-bottom:1px solid #18181e';
     tdActor.textContent = p.actor;
+
+    // Idle time
+    const tdIdle = document.createElement('td');
+    tdIdle.style.cssText = 'padding:0.6rem 1rem;font-size:0.85rem;border-bottom:1px solid #18181e';
+    const idleMs = _idleInfo.idleTimes[p.actor];
+    const isWarned = warnedSet.has(p.actor);
+    tdIdle.textContent = fmtIdleTime(idleMs);
+    tdIdle.style.color = isWarned ? '#ef4444' : (idleMs >= 180000 ? '#f97316' : '#666');
+
+    // Actions
     const tdAction = document.createElement('td');
-    tdAction.style.cssText = 'padding:0.6rem 1rem;text-align:right;border-bottom:1px solid #18181e';
-    const btn = document.createElement('button');
-    btn.className = 'btn-danger';
-    btn.style.cssText = 'padding:0.25rem 0.75rem;font-size:0.8rem';
-    btn.textContent = 'Kick';
-    btn.addEventListener('click', () => kickPlayer(p.actor, p.nick));
-    tdAction.appendChild(btn);
-    tr.append(tdNick, tdActor, tdAction);
+    tdAction.style.cssText = 'padding:0.6rem 1rem;text-align:right;border-bottom:1px solid #18181e;white-space:nowrap';
+
+    const kickBtn = document.createElement('button');
+    kickBtn.className = 'btn-danger';
+    kickBtn.style.cssText = 'padding:0.25rem 0.75rem;font-size:0.8rem';
+    kickBtn.textContent = 'Kick';
+    kickBtn.addEventListener('click', () => kickPlayer(p.actor, p.nick));
+
+    const isWhitelisted = whitelistSet.has((p.nick || '').toLowerCase());
+    const wlBtn = document.createElement('button');
+    wlBtn.className = isWhitelisted ? 'btn-primary' : 'btn-secondary';
+    wlBtn.style.cssText = 'padding:0.25rem 0.75rem;font-size:0.8rem;margin-left:0.4rem';
+    wlBtn.textContent = isWhitelisted ? 'Whitelisted' : 'Whitelist';
+    wlBtn.addEventListener('click', () => toggleWhitelist(p.nick, isWhitelisted));
+
+    tdAction.append(kickBtn, wlBtn);
+    tr.append(tdNick, tdActor, tdIdle, tdAction);
     tbody.appendChild(tr);
   }
 }
@@ -247,6 +282,31 @@ async function kickPlayer(actor, nick) {
   } catch (err) {
     toast(err.message, 'err');
   }
+}
+
+async function toggleWhitelist(nick, isCurrentlyWhitelisted) {
+  try {
+    const method = isCurrentlyWhitelisted ? 'DELETE' : 'POST';
+    const data = await apiFetch(method, '/api/admin/idle-kick/whitelist', { nick });
+    _idleInfo.whitelist = data.whitelist || [];
+    toast(isCurrentlyWhitelisted ? `${nick} removed from whitelist` : `${nick} added to whitelist`);
+    renderAdminPlayers();
+  } catch (err) {
+    toast(err.message, 'err');
+  }
+}
+
+async function refreshIdleInfo() {
+  try {
+    _idleInfo = await apiFetch('GET', '/api/admin/idle-kick/status');
+    renderAdminPlayers();
+  } catch {}
+}
+
+let _idleRefreshTimer = null;
+function startIdleRefresh() {
+  if (_idleRefreshTimer) clearInterval(_idleRefreshTimer);
+  _idleRefreshTimer = setInterval(refreshIdleInfo, 10000);
 }
 
 // ── Chat log (incoming) ────────────────────────────────────────────────────
@@ -597,6 +657,8 @@ function init() {
   loadPlaylists();
   loadRunnerState();
   loadOnlinePlayers();
+  refreshIdleInfo();
+  startIdleRefresh();
   pollStatus();
   connectWs();
 }

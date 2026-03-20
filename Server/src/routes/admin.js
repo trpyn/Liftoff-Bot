@@ -172,6 +172,14 @@ router.get('/status', (req, res) => {
 const idleKick = require('../idleKick');
 
 /**
+ * GET /api/admin/idle-kick/status
+ * Returns idle times, warned actors, and whitelist for the admin dashboard.
+ */
+router.get('/idle-kick/status', (req, res) => {
+  res.json(idleKick.getIdleInfo());
+});
+
+/**
  * GET /api/admin/idle-kick/whitelist
  * Returns the current idle-kick whitelist.
  */

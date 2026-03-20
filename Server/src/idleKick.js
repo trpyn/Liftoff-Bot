@@ -136,6 +136,24 @@ function removeFromWhitelist(nick) {
   _whitelist.delete(nick.toLowerCase());
 }
 
+/**
+ * Returns idle info for all tracked players.
+ * Used by the admin API to display idle times in the dashboard.
+ * Returns: { idleTimes: { actor: ms, ... }, warned: [actor, ...], whitelist: [nick, ...] }
+ */
+function getIdleInfo() {
+  const now = Date.now();
+  const idleTimes = {};
+  for (const [actor, lastTs] of _lastActivity) {
+    idleTimes[actor] = now - lastTs;
+  }
+  return {
+    idleTimes,
+    warned: [..._warned],
+    whitelist: [..._whitelist],
+  };
+}
+
 // ── Core idle check ──────────────────────────────────────────────────────────
 
 function _runIdleCheck() {
@@ -232,5 +250,6 @@ module.exports = {
   getWhitelist,
   addToWhitelist,
   removeFromWhitelist,
+  getIdleInfo,
   destroy,
 };
