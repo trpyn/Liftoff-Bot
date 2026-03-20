@@ -45,3 +45,6 @@ Server/nginx/.htpasswd
 
 # Docker data volume
 Server/data/
+
+# Docs
+Docs/
