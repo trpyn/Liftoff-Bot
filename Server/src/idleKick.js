@@ -13,7 +13,7 @@
 
 const state = require('./state');
 
-const IDLE_TIMEOUT_MS = 10 * 60 * 1000;      // 10 minutes before warning
+const IDLE_TIMEOUT_MS = 5 * 60 * 1000;       // 5 minutes before warning
 const WARN_BEFORE_KICK_MS = 1 * 60 * 1000;   // 1 minute grace after warning
 const CHECK_INTERVAL_MS = 30 * 1000;          // sweep every 30 seconds
 const BOT_NICK = 'JMT-Bot';
@@ -170,7 +170,7 @@ function _runIdleCheck() {
     if (idleMs >= IDLE_TIMEOUT_MS && !_warned.has(actor)) {
       _sendCommand({
         cmd: 'send_chat',
-        message: `<color=#FF0000>WARNING</color> <color=#FFFF00>${nick}, you will be kicked for inactivity in 1 minute!</color>`,
+        message: `<color=#FF0000>WARNING</color> <color=#FFFF00>${nick}, you will be kicked for being idle in 1 minute!</color>`,
       });
       // Send /stay hint as a separate message after a short delay
       setTimeout(() => {

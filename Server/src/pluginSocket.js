@@ -289,7 +289,6 @@ function handlePluginEvent(jsonLine) {
       idleKick.recordActivity(event.actor);
     }
   }
-  if (eventType === E.RACE_RESET) idleKick.resetAllTimers();
   if (eventType === E.PLAYER_ENTERED) idleKick.handlePlayerEntered(event.actor);
   if (eventType === E.PLAYER_LEFT) idleKick.handlePlayerLeft(event.actor);
   if (eventType === E.PLAYER_LIST) {

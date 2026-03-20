@@ -57,9 +57,9 @@ Liftoff Competition transforms a standard Liftoff multiplayer session into a str
 
 ### Idle Kick
 
-- Pilots inactive for 10 minutes receive an in-game warning
+- Pilots inactive for 5 minutes receive an in-game warning
 - After 1 additional minute without activity, they are automatically kicked
-- Players can type `/stay` in chat to reset their idle timer (adds 10 more minutes)
+- Players can type `/stay` in chat to reset their idle timer (adds 5 more minutes)
 - JMT-Bot (the host) is always immune
 - Additional players can be whitelisted via admin API or `IDLE_KICK_WHITELIST` env var
 - Only active when a playlist is running — free lobbies are unaffected
