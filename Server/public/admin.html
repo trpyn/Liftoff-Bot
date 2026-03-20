@@ -198,13 +198,17 @@
 
 <div id="token-overlay">
   <div class="token-box">
-    <h2>Admin Access</h2>
-    <p>Enter your admin token to continue.</p>
+    <h2>Admin Login</h2>
+    <p>Enter your credentials to continue.</p>
     <div>
-      <label>Admin Token</label>
-      <input type="password" id="token-input" placeholder="Bearer token…" autocomplete="off">
+      <label>Username</label>
+      <input type="text" id="login-username" placeholder="Username" autocomplete="username">
     </div>
-    <button class="btn-primary" id="btn-save-token">Continue</button>
+    <div style="margin-top:0.5rem">
+      <label>Password</label>
+      <input type="password" id="login-password" placeholder="Password" autocomplete="current-password">
+    </div>
+    <button class="btn-primary" id="btn-login" style="margin-top:0.75rem">Log In</button>
   </div>
 </div>
 
@@ -217,7 +221,7 @@
   <span><span class="dot" id="plugin-dot"></span><span id="plugin-label">Plugin: checking…</span></span>
   <span><span class="dot" id="ws-dot"></span><span id="ws-label">Live WS: connecting…</span></span>
   <span id="catalog-age" class="catalog-info"></span>
-  <button class="btn-secondary" id="btn-clear-token" style="margin-left:auto;padding:0.3rem 0.75rem;font-size:0.75rem">Change Token</button>
+  <button class="btn-secondary" id="btn-logout" style="margin-left:auto;padding:0.3rem 0.75rem;font-size:0.75rem">Log Out</button>
 </div>
 
 <main>

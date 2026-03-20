@@ -1,6 +1,7 @@
 const { WebSocketServer } = require('ws');
 const db = require('./database');
 const { getCurrentTrack, getOnlinePlayers, getCurrentTrackSince } = require('./state');
+const { getSession } = require('./auth');
 
 const ADMIN_TOKEN = process.env.ADMIN_TOKEN || '';
 const COOKIE_NAME = 'liftoff_admin';
@@ -35,7 +36,9 @@ function createLiveSocketServer(httpServer) {
       // Authenticate via cookie (preferred) or query param (legacy fallback)
       const cookies = parseCookies(req.headers.cookie);
       const token = cookies[COOKIE_NAME] || url.searchParams.get('token') || '';
-      if (!ADMIN_TOKEN || token !== ADMIN_TOKEN) {
+      const session = getSession(token);
+      const isLegacyValid = ADMIN_TOKEN && token === ADMIN_TOKEN;
+      if (!session && !isLegacyValid) {
         console.warn('[admin-ws] Rejected connection: invalid token');
         socket.write('HTTP/1.1 401 Unauthorized\r\n\r\n');
         socket.destroy();

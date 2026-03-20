@@ -80,6 +80,7 @@ Liftoff Competition transforms a standard Liftoff multiplayer session into a str
 
 ### Admin Dashboard
 - Browser-based control panel for event organisers
+- Multi-user authentication — each admin has their own username and password
 - Player management with kick controls, per-player idle time display, and whitelist toggle
 - Track catalog browsing and selection
 - Playlist creation, management, and execution
@@ -152,12 +153,15 @@ Liftoff/
 │   │   ├── broadcast.js                # Event broadcast dispatcher
 │   │   ├── playlistRunner.js           # Playlist scheduling & execution
 │   │   ├── state.js                    # In-memory state
+│   │   ├── auth.js                     # Password hashing & session store
 │   │   ├── idleKick.js                 # Auto-kick idle pilots
 │   │   ├── skipVote.js                 # Vote-to-skip logic
 │   │   ├── contracts.js                # Event validation
 │   │   ├── routes/
 │   │   │   ├── admin.js                # Admin API endpoints
 │   │   │   └── public.js               # Public API endpoints
+│   │   ├── cli/
+│   │   │   └── createUser.js           # CLI admin user creation
 │   │   └── db/                         # SQLite layer
 │   │
 │   ├── public/
@@ -197,6 +201,8 @@ Liftoff/
    ADMIN_TOKEN=your-admin-token
    DB_PATH=./competition.db
    IDLE_KICK_WHITELIST=              # comma-separated nicks immune to idle kick
+   ADMIN_USER=                       # initial admin username (first run only)
+   ADMIN_PASS=                       # initial admin password (first run only)
    ```
 
 3. **Run with Docker (recommended):**
@@ -210,7 +216,19 @@ Liftoff/
    npm start
    ```
 
-4. **Access the interfaces:**
+4. **Create an admin user** (choose one method):
+
+   **Option A — via environment variables:** Set `ADMIN_USER` and `ADMIN_PASS` in `.env` before first start. The user is created automatically if the database has no users yet.
+
+   **Option B — via CLI:**
+   ```bash
+   cd Server
+   node src/cli/createUser.js <username> <password>
+   ```
+
+   You can create additional users the same way. The `ADMIN_TOKEN` in `.env` continues to work for API/script access via Bearer header.
+
+5. **Access the interfaces:**
    - Live view: `http://localhost:3000/`
    - Admin panel: `http://localhost:3000/admin.html`
 
@@ -237,8 +255,9 @@ For production with HTTPS:
 
 1. Set up your domain's DNS to point to your server.
 2. Run `init-certs.sh` to provision Let's Encrypt certificates.
-3. Run `init-htpasswd.sh` to set up Basic Auth for the admin panel.
-4. Start with Docker Compose — Nginx handles SSL termination and proxying.
+3. (Optional) Run `init-htpasswd.sh` to set up Nginx Basic Auth as an extra layer for the admin page.
+4. Create admin users via CLI or env vars (see step 4 above).
+5. Start with Docker Compose — Nginx handles SSL termination and proxying.
 
 ---
 

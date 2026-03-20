@@ -4,6 +4,7 @@ const { sendCommand, sendCommandAwait, getPluginSocket, setCurrentTrack, fireTem
 const broadcast = require('../broadcast');
 const db = require('../database');
 const playlist = require('../playlistRunner');
+const { hashPassword, verifyPassword, createSession, getSession, destroySession, destroyUserSessions } = require('../auth');
 
 const router = Router();
 
@@ -32,20 +33,43 @@ function extractToken(req) {
 // ── Login endpoint (before auth middleware) ─────────────────────────────────
 
 router.post('/login', (req, res) => {
-  const { token } = req.body || {};
-  if (!ADMIN_TOKEN || token !== ADMIN_TOKEN) {
-    return res.status(401).json({ error: 'Invalid token' });
+  const { username, password, token } = req.body || {};
+
+  // Legacy: accept { token } for backward compat with ADMIN_TOKEN
+  if (token) {
+    if (!ADMIN_TOKEN || token !== ADMIN_TOKEN) {
+      return res.status(401).json({ error: 'Invalid token' });
+    }
+    res.cookie(COOKIE_NAME, token, {
+      httpOnly: true,
+      sameSite: 'strict',
+      path: '/',
+      maxAge: 24 * 60 * 60 * 1000,
+    });
+    return res.json({ ok: true });
   }
-  res.cookie(COOKIE_NAME, token, {
+
+  // User account login
+  if (!username || !password) {
+    return res.status(400).json({ error: 'Username and password are required' });
+  }
+  const user = db.getUserByUsername(username);
+  if (!user || !verifyPassword(password, user.password_hash)) {
+    return res.status(401).json({ error: 'Invalid username or password' });
+  }
+  const sessionToken = createSession(user);
+  res.cookie(COOKIE_NAME, sessionToken, {
     httpOnly: true,
     sameSite: 'strict',
     path: '/',
-    maxAge: 24 * 60 * 60 * 1000, // 24 hours
+    maxAge: 24 * 60 * 60 * 1000,
   });
-  res.json({ ok: true });
+  res.json({ ok: true, username: user.username });
 });
 
 router.post('/logout', (req, res) => {
+  const token = extractToken(req);
+  destroySession(token);
   res.clearCookie(COOKIE_NAME, { path: '/' });
   res.json({ ok: true });
 });
@@ -54,10 +78,16 @@ router.post('/logout', (req, res) => {
 
 router.use((req, res, next) => {
   const token = extractToken(req);
-  if (!ADMIN_TOKEN || token !== ADMIN_TOKEN) {
-    return res.status(401).json({ error: 'Unauthorized' });
+  const session = getSession(token);
+  if (session) {
+    req.adminUser = session;
+    return next();
   }
-  next();
+  if (ADMIN_TOKEN && token === ADMIN_TOKEN) {
+    req.adminUser = { userId: 0, username: '_api_', role: 'admin' };
+    return next();
+  }
+  return res.status(401).json({ error: 'Unauthorized' });
 });
 
 // ── Rate limiting ───────────────────────────────────────────────────────────
@@ -165,6 +195,44 @@ router.post('/players/kick', strictLimiter, async (req, res) => {
 router.get('/status', (req, res) => {
   const socket = getPluginSocket();
   res.json({ plugin_connected: socket !== null && socket.readyState === 1 });
+});
+
+// ── User management ─────────────────────────────────────────────────────────
+
+/** GET /api/admin/users */
+router.get('/users', (req, res) => {
+  res.json(db.getUsers());
+});
+
+/** POST /api/admin/users  Body: { username, password } */
+router.post('/users', strictLimiter, (req, res) => {
+  const { username = '', password = '' } = req.body;
+  if (!username.trim() || !password) {
+    return res.status(400).json({ error: 'username and password are required' });
+  }
+  if (password.length < 6) {
+    return res.status(400).json({ error: 'Password must be at least 6 characters' });
+  }
+  try {
+    const user = db.createUser(username.trim(), hashPassword(password));
+    res.status(201).json(user);
+  } catch (err) {
+    if (err.message && err.message.includes('UNIQUE')) {
+      return res.status(409).json({ error: 'Username already exists' });
+    }
+    throw err;
+  }
+});
+
+/** DELETE /api/admin/users/:id */
+router.delete('/users/:id', (req, res) => {
+  const id = Number(req.params.id);
+  if (req.adminUser && req.adminUser.userId === id) {
+    return res.status(400).json({ error: 'Cannot delete your own account' });
+  }
+  destroyUserSessions(id);
+  db.deleteUser(id);
+  res.json({ ok: true });
 });
 
 // ── Idle Kick Whitelist ──────────────────────────────────────────────────────

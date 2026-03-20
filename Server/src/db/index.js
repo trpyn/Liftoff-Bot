@@ -6,4 +6,5 @@ module.exports = {
   ...require('./queries'),
   ...require('./chatTemplates'),
   ...require('./playlists'),
+  ...require('./adminUsers'),
 };

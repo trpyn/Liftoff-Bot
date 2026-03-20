@@ -1,24 +1,23 @@
-// ── Token management ───────────────────────────────────────────────────────
-// Login sets an httpOnly cookie (used by WebSocket) AND returns the token
-// so we can send it as Bearer header for API calls (more reliable behind proxies).
-let adminToken = '';
+// ── Authentication ─────────────────────────────────────────────────────────
+// Login sets an httpOnly cookie — no token stored in JS memory.
 
-async function saveToken() {
-  const val = document.getElementById('token-input').value.trim();
-  if (!val) return;
+async function login() {
+  const username = document.getElementById('login-username').value.trim();
+  const password = document.getElementById('login-password').value;
+  if (!username || !password) return;
   try {
     const res = await fetch('/api/admin/login', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ token: val }),
+      body: JSON.stringify({ username, password }),
     });
     if (!res.ok) {
       const data = await res.json().catch(() => ({}));
       toast(data.error || 'Login failed', 'error');
       return;
     }
-    adminToken = val;
-    document.getElementById('token-input').value = '';
+    document.getElementById('login-username').value = '';
+    document.getElementById('login-password').value = '';
     document.getElementById('token-overlay').style.display = 'none';
     init();
   } catch (err) {
@@ -26,9 +25,8 @@ async function saveToken() {
   }
 }
 
-async function clearToken() {
+async function logout() {
   try { await fetch('/api/admin/logout', { method: 'POST' }); } catch {}
-  adminToken = '';
   document.getElementById('token-overlay').style.display = 'flex';
 }
 
@@ -44,11 +42,9 @@ function toast(msg, type = 'ok') {
 
 // ── API helpers ────────────────────────────────────────────────────────────
 async function apiFetch(method, path, body) {
-  const headers = { 'Content-Type': 'application/json' };
-  if (adminToken) headers['Authorization'] = `Bearer ${adminToken}`;
   const res = await fetch(path, {
     method,
-    headers,
+    headers: { 'Content-Type': 'application/json' },
     body: body ? JSON.stringify(body) : undefined,
   });
   const data = await res.json();
@@ -667,12 +663,15 @@ function init() {
 document.addEventListener('DOMContentLoaded', () => {
 
   // ── Static element bindings ──────────────────────────────────────────────
-  document.getElementById('token-input').addEventListener('keydown', e => {
-    if (e.key === 'Enter') saveToken();
+  document.getElementById('login-password').addEventListener('keydown', e => {
+    if (e.key === 'Enter') login();
+  });
+  document.getElementById('login-username').addEventListener('keydown', e => {
+    if (e.key === 'Enter') document.getElementById('login-password').focus();
   });
 
-  document.getElementById('btn-save-token').addEventListener('click', saveToken);
-  document.getElementById('btn-clear-token').addEventListener('click', clearToken);
+  document.getElementById('btn-login').addEventListener('click', login);
+  document.getElementById('btn-logout').addEventListener('click', logout);
   document.getElementById('btn-set-track').addEventListener('click', setTrack);
   document.getElementById('btn-next-track').addEventListener('click', nextTrack);
   document.getElementById('btn-refresh-catalog').addEventListener('click', refreshCatalog);
