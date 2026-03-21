@@ -439,6 +439,31 @@ function hasRaceResults(raceId) {
   ).get(raceId).n > 0;
 }
 
+// ── Runner State Persistence ────────────────────────────────────────────────
+
+function saveRunnerState(state) {
+  const db = getDb();
+  const upsert = db.prepare(
+    "INSERT INTO kv_store (key, value) VALUES (?, ?) ON CONFLICT(key) DO UPDATE SET value = excluded.value"
+  );
+  upsert.run('runner_auto_managed', state.autoManaged ? '1' : '0');
+  upsert.run('runner_week_id', state.currentWeekId != null ? String(state.currentWeekId) : '');
+  upsert.run('runner_playlist_index', String(state.currentPlaylistIndex || 0));
+}
+
+function loadRunnerState() {
+  const db = getDb();
+  const get = (key) => {
+    const row = db.prepare('SELECT value FROM kv_store WHERE key = ?').get(key);
+    return row ? row.value : null;
+  };
+  return {
+    autoManaged: get('runner_auto_managed') === '1',
+    currentWeekId: get('runner_week_id') ? Number(get('runner_week_id')) : null,
+    currentPlaylistIndex: Number(get('runner_playlist_index') || 0),
+  };
+}
+
 module.exports = {
   // Competitions
   createCompetition,
@@ -484,4 +509,7 @@ module.exports = {
   getPilotActiveDays,
   getPilotDistinctTracks,
   hasRaceResults,
+  // Runner state
+  saveRunnerState,
+  loadRunnerState,
 };

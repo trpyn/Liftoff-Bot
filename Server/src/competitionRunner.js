@@ -33,10 +33,36 @@ const state = {
 let _timer = null;
 let _playlistWrapDetected = false;
 
+function _persistState() {
+  try {
+    db.saveRunnerState(state);
+  } catch (err) {
+    console.error('[competition] Failed to persist state:', err.message);
+  }
+}
+
+function _restoreState() {
+  try {
+    const saved = db.loadRunnerState();
+    if (saved.autoManaged) {
+      state.autoManaged = true;
+      state.currentWeekId = saved.currentWeekId;
+      state.currentPlaylistIndex = saved.currentPlaylistIndex;
+      console.log('[competition] Restored state from DB: auto_managed=true, week_id=' + saved.currentWeekId);
+    }
+  } catch (err) {
+    console.error('[competition] Failed to restore state:', err.message);
+  }
+}
+
 // ── Public API ──────────────────────────────────────────────────────────────
 
 function start() {
   if (_timer) return;
+
+  // Restore persisted state before first tick
+  _restoreState();
+
   _timer = setInterval(tick, CHECK_INTERVAL);
   console.log('[competition] Runner started (checking every 60s)');
 
@@ -51,6 +77,7 @@ function stop() {
   }
   state.running = false;
   state.autoManaged = false;
+  _persistState();
   console.log('[competition] Runner stopped');
 }
 
@@ -77,6 +104,7 @@ function setAutoManaged(enabled) {
       }
     }
   }
+  _persistState();
   _broadcastState();
 }
 
@@ -231,6 +259,7 @@ function resumeFromCalculatedPosition(week, weekPlaylists) {
 
   state.currentPlaylistIndex = pos.playlistIndex;
   _playlistWrapDetected = false;
+  _persistState();
 
   // Check if the in-game track already matches what we expect
   const current = getCurrentTrack();
@@ -279,6 +308,8 @@ function activateWeek(week) {
   const weekPlaylists = db.getWeekPlaylists(week.id);
   state.weekPlaylists = weekPlaylists;
 
+  _persistState();
+
   broadcast.broadcastAll({
     event_type: 'competition_week_started',
     week_id: week.id,
@@ -312,6 +343,7 @@ function advanceToNextPlaylist() {
     console.error(`[competition] Failed to start playlist ${wp.playlist_id}:`, err.message);
   }
 
+  _persistState();
   _broadcastState();
 }
 

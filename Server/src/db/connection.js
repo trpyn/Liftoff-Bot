@@ -169,6 +169,11 @@ function initDatabase() {
       UNIQUE(week_id, pilot_key)
     );
 
+    CREATE TABLE IF NOT EXISTS kv_store (
+      key   TEXT PRIMARY KEY,
+      value TEXT
+    );
+
     CREATE INDEX IF NOT EXISTS idx_weekly_points_week_pilot ON weekly_points(week_id, pilot_key);
     CREATE INDEX IF NOT EXISTS idx_race_results_week ON race_results(week_id);
     CREATE INDEX IF NOT EXISTS idx_race_results_pilot ON race_results(pilot_key);
