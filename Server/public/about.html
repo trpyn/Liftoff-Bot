@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>About · Liftoff Competition</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      background: #0d0d0f;
+      color: #e0e0e0;
+      min-height: 100vh;
+    }
+
+    header {
+      background: #111318;
+      border-bottom: 2px solid #f97316;
+      padding: 1rem 2rem;
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+    header h1 { font-size: 1.4rem; color: #f97316; letter-spacing: 0.05em; }
+    header a {
+      font-size: 0.85rem; color: #888; text-decoration: none; transition: color 0.2s;
+    }
+    header a:hover { color: #f97316; }
+    .header-links { margin-left: auto; display: flex; gap: 1.25rem; }
+
+    main { max-width: 900px; margin: 0 auto; padding: 2rem 1rem; display: grid; gap: 2rem; }
+
+    section {
+      background: #111318;
+      border: 1px solid #222;
+      border-radius: 8px;
+      overflow: hidden;
+    }
+    section h2 {
+      padding: 0.75rem 1.25rem;
+      background: #16181f;
+      font-size: 0.85rem;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: #f97316;
+      border-bottom: 1px solid #222;
+    }
+    .section-body {
+      padding: 1.25rem;
+      line-height: 1.7;
+      font-size: 0.92rem;
+    }
+    .section-body p {
+      margin-bottom: 0.75rem;
+    }
+    .section-body p:last-child {
+      margin-bottom: 0;
+    }
+
+    /* Intro banner */
+    .intro-banner {
+      background: linear-gradient(135deg, #1a1008 0%, #111318 100%);
+      border: 1px solid #f97316;
+      border-radius: 8px;
+      padding: 2rem;
+      text-align: center;
+    }
+    .intro-banner h2 {
+      font-size: 1.6rem;
+      color: #f97316;
+      margin-bottom: 0.75rem;
+      background: none;
+      border: none;
+      padding: 0;
+      text-transform: none;
+      letter-spacing: normal;
+    }
+    .intro-banner p {
+      color: #aaa;
+      font-size: 1rem;
+      max-width: 650px;
+      margin: 0 auto;
+      line-height: 1.6;
+    }
+
+    /* Command table */
+    table { width: 100%; border-collapse: collapse; }
+    th {
+      padding: 0.6rem 1rem;
+      text-align: left;
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: #666;
+      border-bottom: 1px solid #1e1e24;
+    }
+    td {
+      padding: 0.65rem 1rem;
+      font-size: 0.9rem;
+      border-bottom: 1px solid #18181e;
+    }
+    tr:last-child td { border-bottom: none; }
+    tr:hover td { background: #16181f; }
+
+    .cmd { color: #a855f7; font-family: 'Cascadia Code', 'Fira Code', monospace; font-weight: 600; }
+
+    /* Scoring grid */
+    .scoring-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+      gap: 1rem;
+      padding: 1.25rem;
+    }
+    .scoring-card {
+      background: #16181f;
+      border: 1px solid #222;
+      border-radius: 6px;
+      padding: 1rem;
+    }
+    .scoring-card h3 {
+      font-size: 0.8rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: #f97316;
+      margin-bottom: 0.5rem;
+    }
+    .scoring-card p {
+      font-size: 0.85rem;
+      color: #aaa;
+      line-height: 1.5;
+    }
+    .scoring-card .points {
+      font-variant-numeric: tabular-nums;
+      color: #e0e0e0;
+      font-weight: 600;
+    }
+
+    /* Links list */
+    .links-list {
+      list-style: none;
+      padding: 1.25rem;
+      display: grid;
+      gap: 0.75rem;
+    }
+    .links-list li {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+    .links-list a {
+      color: #818cf8;
+      text-decoration: none;
+      font-size: 0.92rem;
+      transition: color 0.2s;
+    }
+    .links-list a:hover { color: #f97316; }
+    .links-list .link-desc {
+      color: #555;
+      font-size: 0.82rem;
+    }
+
+    /* How it works steps */
+    .steps {
+      padding: 1.25rem;
+      display: grid;
+      gap: 1rem;
+    }
+    .step {
+      display: flex;
+      gap: 1rem;
+      align-items: flex-start;
+    }
+    .step-num {
+      flex-shrink: 0;
+      width: 32px;
+      height: 32px;
+      background: #f97316;
+      color: #0d0d0f;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      font-size: 0.85rem;
+    }
+    .step-content h3 {
+      font-size: 0.9rem;
+      color: #e0e0e0;
+      margin-bottom: 0.25rem;
+    }
+    .step-content p {
+      font-size: 0.85rem;
+      color: #888;
+      line-height: 1.5;
+    }
+
+    @media (max-width: 600px) {
+      header { flex-wrap: wrap; padding: 1rem; }
+      .header-links { width: 100%; justify-content: flex-end; }
+      .scoring-grid { grid-template-columns: 1fr; }
+      .intro-banner { padding: 1.5rem 1rem; }
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <h1>About</h1>
+  <div class="header-links">
+    <a href="/">Live Race</a>
+    <a href="/competition.html">Competition</a>
+    <a href="/stats.html">Stats</a>
+  </div>
+</header>
+
+<main>
+
+  <!-- Intro -->
+  <div class="intro-banner">
+    <h2>Liftoff Competition Platform</h2>
+    <p>An automated competition system for the Liftoff FPV Simulator. It turns casual multiplayer lobbies into structured, scored racing events with real-time leaderboards, automated track rotation, and weekly competitions.</p>
+  </div>
+
+  <!-- How It Works -->
+  <section>
+    <h2>How It Works</h2>
+    <div class="steps">
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-content">
+          <h3>Join the Lobby</h3>
+          <p>Connect to the Liftoff multiplayer lobby running the competition plugin. Just fly — the system tracks everything automatically.</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">2</div>
+        <div class="step-content">
+          <h3>Race on Curated Tracks</h3>
+          <p>Tracks rotate automatically via managed playlists. Each track runs for a set time before the system advances to the next one.</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">3</div>
+        <div class="step-content">
+          <h3>Earn Points</h3>
+          <p>Every race during a competition week is scored. You earn points from race positions, lap counts, fastest laps, consistency, and more.</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">4</div>
+        <div class="step-content">
+          <h3>Climb the Leaderboard</h3>
+          <p>Weekly scores are aggregated into a season leaderboard. Compete across multiple weeks to claim the top spot.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Competition Scoring -->
+  <section>
+    <h2>Competition Scoring</h2>
+    <div class="scoring-grid">
+      <div class="scoring-card">
+        <h3>Position Points</h3>
+        <p>F1-style scoring based on your finishing position each race.</p>
+        <p class="points">1st: 25 · 2nd: 18 · 3rd: 15 · 4th: 12 · 5th: 10 · 6th: 8 · 7th: 6 · 8th: 4</p>
+      </div>
+      <div class="scoring-card">
+        <h3>Lap Points</h3>
+        <p>Rewarded for putting in the laps. Every 5 completed laps earns a bonus point.</p>
+      </div>
+      <div class="scoring-card">
+        <h3>Hot Streak</h3>
+        <p>Set the fastest lap of the race and earn bonus points. Rewards raw speed.</p>
+      </div>
+      <div class="scoring-card">
+        <h3>Consistency</h3>
+        <p>Points for maintaining tight lap times. The smaller the gap between your best and worst laps, the higher you score.</p>
+      </div>
+      <div class="scoring-card">
+        <h3>Improvement</h3>
+        <p>Rewarded for getting faster throughout the race. Show progression and you earn extra points.</p>
+      </div>
+      <div class="scoring-card">
+        <h3>Participation</h3>
+        <p>Show up, race, and earn points just for being part of the competition. More races = more points.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Chat Commands -->
+  <section>
+    <h2>In-Game Chat Commands</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>Command</th>
+          <th>Description</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="cmd">/info</td>
+          <td>Shows available commands and time remaining on the current track</td>
+        </tr>
+        <tr>
+          <td class="cmd">/next</td>
+          <td>Vote to skip the current track. Starts a 3-minute vote — needs a majority to pass</td>
+        </tr>
+        <tr>
+          <td class="cmd">/extend</td>
+          <td>Vote to extend the current track by 5 minutes. Also needs a majority vote</td>
+        </tr>
+        <tr>
+          <td class="cmd">/stay</td>
+          <td>Reset your idle timer if you're about to be kicked for inactivity</td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+
+  <!-- Idle Kick -->
+  <section>
+    <h2>Idle Kick System</h2>
+    <div class="section-body">
+      <p>When the lobby is full (8 players), an idle detection system activates to free up slots for active pilots. If you haven't completed a lap, checkpoint, or sent a chat message for 5 minutes, you'll receive a warning. After another minute of inactivity, you'll be removed from the lobby.</p>
+      <p>Use the <span class="cmd">/stay</span> command to reset your idle timer if you need a break but want to keep your spot.</p>
+    </div>
+  </section>
+
+  <!-- System Architecture -->
+  <section>
+    <h2>How the System Works</h2>
+    <div class="section-body">
+      <p>The platform consists of three main components working together:</p>
+      <p><strong style="color:#f97316">Game Plugin</strong> — A BepInEx mod running inside the Liftoff simulator. It captures race events (laps, positions, player joins/leaves) and sends them to the server over a WebSocket connection. It also receives commands from the server to change tracks, send chat messages, and kick players.</p>
+      <p><strong style="color:#f97316">Server</strong> — A Node.js backend that processes all race events, manages competitions, runs scoring, handles track playlists, and serves the public website. Data is stored in SQLite. Real-time updates are pushed to spectators via WebSocket.</p>
+      <p><strong style="color:#f97316">Public Website</strong> — The pages you're browsing now. Live race data, competition standings, and historical stats — all updated in real time.</p>
+    </div>
+  </section>
+
+  <!-- Links -->
+  <section>
+    <h2>Links</h2>
+    <ul class="links-list">
+      <li>
+        <a href="https://github.com/geekhostuk/Liftoff-Bot" target="_blank" rel="noopener">GitHub Repository</a>
+        <span class="link-desc">— Source code, setup guide, and documentation</span>
+      </li>
+      <li>
+        <a href="https://store.steampowered.com/app/410340/Liftoff_FPV_Drone_Racing/" target="_blank" rel="noopener">Liftoff on Steam</a>
+        <span class="link-desc">— Get the FPV drone racing simulator</span>
+      </li>
+      <li>
+        <a href="https://github.com/BepInEx/BepInEx" target="_blank" rel="noopener">BepInEx</a>
+        <span class="link-desc">— Unity game modding framework used by the plugin</span>
+      </li>
+    </ul>
+  </section>
+
+</main>
+
+</body>
+</html>
