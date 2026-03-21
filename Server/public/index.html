@@ -145,7 +145,8 @@
 
 <header>
   <h1>⚡ Liftoff Competition</h1>
-  <a href="/stats.html" style="color:#888;text-decoration:none;font-size:0.85rem;transition:color 0.2s;" onmouseover="this.style.color='#f97316'" onmouseout="this.style.color='#888'">Stats & Leaderboard →</a>
+  <a href="/competition.html" style="color:#888;text-decoration:none;font-size:0.85rem;transition:color 0.2s;" onmouseover="this.style.color='#f97316'" onmouseout="this.style.color='#888'">Competition</a>
+  <a href="/stats.html" style="color:#888;text-decoration:none;font-size:0.85rem;transition:color 0.2s;" onmouseover="this.style.color='#f97316'" onmouseout="this.style.color='#888'">Stats & Leaderboard</a>
   <div id="plugin-status">
     <div class="dot" id="status-dot"></div>
     <span id="status-label">Connecting…</span>
@@ -170,6 +171,21 @@
       <div class="value" id="activity-30d">—</div>
       <div class="sublabel">Last 30 days</div>
     </div>
+  </div>
+
+  <!-- Competition widget -->
+  <div id="comp-widget" style="display:none">
+    <a href="/competition.html" style="text-decoration:none;display:block">
+      <div style="background:linear-gradient(135deg,#1a1008 0%,#111318 100%);border:1px solid #f97316;border-radius:8px;padding:0.75rem 1.25rem;display:flex;align-items:center;gap:1rem;transition:border-color 0.2s"
+           onmouseover="this.style.borderColor='#fb923c'" onmouseout="this.style.borderColor='#f97316'">
+        <div style="flex:1">
+          <div style="font-size:0.95rem;font-weight:700;color:#f97316" id="comp-widget-title"></div>
+          <div style="font-size:0.8rem;color:#888" id="comp-widget-week"></div>
+        </div>
+        <div id="comp-widget-top3" style="display:flex;gap:1rem;font-size:0.85rem"></div>
+        <div style="color:#666;font-size:0.8rem">View standings &rarr;</div>
+      </div>
+    </a>
   </div>
 
   <section id="live-section">

@@ -27,4 +27,11 @@ module.exports = {
   PLAYLIST_STATE: 'playlist_state',
   STATE_SNAPSHOT: 'state_snapshot',
   KEEPALIVE: 'keepalive',
+
+  // Server → Browser (competition)
+  COMPETITION_WEEK_STARTED: 'competition_week_started',
+  COMPETITION_WEEK_FINALISED: 'competition_week_finalised',
+  COMPETITION_STANDINGS_UPDATE: 'competition_standings_update',
+  COMPETITION_POINTS_AWARDED: 'competition_points_awarded',
+  COMPETITION_RUNNER_STATE: 'competition_runner_state',
 };

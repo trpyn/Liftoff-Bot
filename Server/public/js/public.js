@@ -306,7 +306,38 @@ function connect() {
   };
 }
 
+// ── Competition widget ────────────────────────────────────────────────────
+function loadCompWidget() {
+  fetch('/api/competition/current')
+    .then(r => r.json())
+    .then(data => {
+      const widget = document.getElementById('comp-widget');
+      if (!data.competition) { widget.style.display = 'none'; return; }
+      widget.style.display = '';
+      document.getElementById('comp-widget-title').textContent = data.competition.name;
+      const week = data.current_week;
+      document.getElementById('comp-widget-week').textContent = week
+        ? `Week ${week.week_number} in progress`
+        : 'Between weeks';
+
+      // Load top 3
+      fetch('/api/competition/standings')
+        .then(r => r.json())
+        .then(standings => {
+          const top3 = document.getElementById('comp-widget-top3');
+          if (!standings.length) { top3.innerHTML = ''; return; }
+          const medals = ['&#x1F947;', '&#x1F948;', '&#x1F949;'];
+          top3.innerHTML = standings.slice(0, 3).map((s, i) =>
+            `<span style="color:${i === 0 ? '#f59e0b' : i === 1 ? '#94a3b8' : '#b45309'}">${medals[i]} ${esc(s.display_name)} <span style="color:#666">${s.total_points}pts</span></span>`
+          ).join('');
+        })
+        .catch(() => {});
+    })
+    .catch(() => {});
+}
+
 loadInitialState();
 loadPilotActivity();
 fetchAllTimeStats();
+loadCompWidget();
 connect();

@@ -219,6 +219,9 @@ const PUBLIC_EVENT_TYPES = new Set([
   'player_entered', 'player_left', 'player_list',
   'track_changed', 'state_snapshot', 'playlist_state',
   'checkpoint', 'pilot_complete', 'pilot_reset', 'keepalive',
+  'competition_week_started', 'competition_week_finalised',
+  'competition_standings_update', 'competition_points_awarded',
+  'competition_runner_state',
 ]);
 
 // Fields to strip from events before public broadcast
@@ -285,7 +288,8 @@ function handlePluginEvent(jsonLine) {
   if (event.actor != null) {
     if (eventType === E.LAP_RECORDED || eventType === E.CHECKPOINT ||
         eventType === E.PILOT_COMPLETE || eventType === E.PILOT_RESET ||
-        eventType === E.CHAT_MESSAGE) {
+        eventType === E.CHAT_MESSAGE || eventType === E.RACE_END ||
+        eventType === E.RACE_RESET) {
       idleKick.recordActivity(event.actor);
     }
   }

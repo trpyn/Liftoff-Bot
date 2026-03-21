@@ -7,4 +7,5 @@ module.exports = {
   ...require('./chatTemplates'),
   ...require('./playlists'),
   ...require('./adminUsers'),
+  ...require('./competition'),
 };

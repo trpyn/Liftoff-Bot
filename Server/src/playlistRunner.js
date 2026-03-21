@@ -175,6 +175,81 @@ function skipToIndex(index) {
   _broadcastState();
 }
 
+/**
+ * Resume a playlist at a specific track index with a custom initial delay.
+ * Used by the competition runner to pick up where we left off after a reboot.
+ *
+ * @param {number} playlistId
+ * @param {number} intervalMs - normal interval for subsequent track changes
+ * @param {number} startIndex - track index to resume at
+ * @param {number} remainingMs - time until the next track change (custom first delay)
+ * @param {boolean} [forceTrack=true] - whether to send set_track (false to skip if track already correct)
+ */
+function resumePlaylist(playlistId, intervalMs, startIndex, remainingMs, forceTrack = true) {
+  const playlist = db.getPlaylistById(playlistId);
+  if (!playlist) throw new Error(`Playlist ${playlistId} not found`);
+
+  const tracks = db.getPlaylistTracks(playlistId);
+  if (tracks.length === 0) throw new Error('Playlist is empty — add tracks first');
+
+  const idx = Math.max(0, Math.min(startIndex, tracks.length - 1));
+
+  stopPlaylist();
+
+  state.running = true;
+  state.playlistId = playlistId;
+  state.playlistName = playlist.name;
+  state.currentIndex = idx;
+  state.intervalMs = intervalMs;
+  state.tracks = tracks;
+
+  if (forceTrack) {
+    _applyCurrentTrack();
+  } else {
+    // Just update internal state without sending commands — track is already correct
+    const t = state.tracks[idx];
+    if (t) setCurrentTrack({ env: t.env, track: t.track, race: t.race });
+  }
+
+  // Schedule next change with the custom remaining time instead of full interval
+  const delay = Math.max(1000, remainingMs); // minimum 1 second
+  state.nextChangeAt = new Date(Date.now() + delay);
+  _clearPreTimers();
+
+  // Schedule pre-change messages relative to the custom delay
+  if (state.tracks.length > 0) {
+    let preTemplates = [];
+    try { preTemplates = db.getChatTemplatesByTrigger('track_change').filter(t => t.delay_ms < 0); } catch (_) {}
+    if (preTemplates.length > 0) {
+      const nextIndex = (state.currentIndex + 1) % state.tracks.length;
+      const nextTrack = state.tracks[nextIndex];
+      for (const tmpl of preTemplates) {
+        const fireAt = delay + tmpl.delay_ms;
+        if (fireAt <= 0) continue;
+        let message = tmpl.template;
+        const vars = { env: nextTrack.env, track: nextTrack.track, race: nextTrack.race,
+                       mins: Math.round(Math.abs(tmpl.delay_ms) / 60000) };
+        for (const [k, v] of Object.entries(vars)) message = message.replaceAll(`{${k}}`, v ?? '');
+        message = message.trim();
+        if (!message) continue;
+        _preTimers.push(setTimeout(() => sendCommand({ cmd: 'send_chat', message }), fireAt));
+      }
+    }
+  }
+
+  _timer = setTimeout(() => {
+    state.currentIndex = (state.currentIndex + 1) % state.tracks.length;
+    try { _applyCurrentTrack(); } catch (err) {
+      console.error('[playlist] Error applying track during auto-advance:', err.message);
+    }
+    _scheduleNext();
+    _broadcastState();
+  }, delay);
+
+  console.log(`[playlist] Resumed "${playlist.name}" at track ${idx + 1}/${tracks.length} (next change in ${Math.round(delay / 1000)}s)`);
+  _broadcastState();
+}
+
 // ── Internals ────────────────────────────────────────────────────────────────
 
 function _scheduleNext() {
@@ -234,4 +309,4 @@ function _broadcastState() {
   broadcast.broadcastAll({ event_type: 'playlist_state', ...getState() });
 }
 
-module.exports = { init, getState, startPlaylist, stopPlaylist, skipToNext, skipToIndex, extendTimer, onStop };
+module.exports = { init, getState, startPlaylist, resumePlaylist, stopPlaylist, skipToNext, skipToIndex, extendTimer, onStop };
