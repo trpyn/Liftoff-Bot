@@ -526,7 +526,8 @@ internal sealed class RaceStateProjector
         _raceEndEmitted = true;
 
         var participantCount = _raceParticipants.Count;
-        var completedCount = _actorLapState.Values.Count(p => p.IsComplete);
+        // In a forced end (e.g. track change), treat all participants as completed
+        var completedCount = participantCount;
 
         var ranked = _actorLapState.Values
             .Where(p => p.LapTimesMs.Count >= 1)

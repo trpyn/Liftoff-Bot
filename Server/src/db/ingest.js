@@ -16,15 +16,45 @@ function handleSessionStarted(event) {
 function handleRaceReset(event, currentTrack = {}) {
   const db = getDb();
 
-  // Close any open races for this session (safety net for missed race_end events)
-  db.prepare(`
-    UPDATE races SET ended_at = @ended_at
+  // Close any open races for this session and populate results from laps
+  const openRaces = db.prepare(`
+    SELECT id FROM races
     WHERE session_id = @session_id AND ended_at IS NULL AND id != @id
-  `).run({
-    ended_at: event.timestamp_utc,
+  `).all({
     session_id: event.session_id,
     id: event.race_id,
   });
+
+  for (const race of openRaces) {
+    const participants = db.prepare(`
+      SELECT COUNT(DISTINCT actor) AS cnt FROM laps WHERE race_id = ?
+    `).get(race.id)?.cnt || 0;
+
+    const winner = participants > 0 ? db.prepare(`
+      SELECT actor, nick, MIN(lap_ms) AS best_ms
+      FROM laps WHERE race_id = ?
+      GROUP BY actor ORDER BY best_ms ASC LIMIT 1
+    `).get(race.id) : null;
+
+    db.prepare(`
+      UPDATE races
+      SET ended_at        = @ended_at,
+          winner_actor    = COALESCE(winner_actor, @winner_actor),
+          winner_nick     = COALESCE(winner_nick, @winner_nick),
+          winner_total_ms = COALESCE(winner_total_ms, @winner_total_ms),
+          participants    = CASE WHEN participants > 0 THEN participants ELSE @participants END,
+          completed       = CASE WHEN completed > 0 THEN completed ELSE @completed END
+      WHERE id = @id
+    `).run({
+      id: race.id,
+      ended_at: event.timestamp_utc,
+      winner_actor: winner?.actor ?? null,
+      winner_nick: winner?.nick ?? null,
+      winner_total_ms: winner?.best_ms ?? null,
+      participants,
+      completed: participants,
+    });
+  }
 
   const stmt = db.prepare(`
     INSERT OR IGNORE INTO races (id, session_id, ordinal, started_at, env, track)
