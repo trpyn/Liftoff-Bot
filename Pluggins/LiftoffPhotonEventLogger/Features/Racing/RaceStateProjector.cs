@@ -165,6 +165,8 @@ internal sealed class RaceStateProjector
 
     public void StartNewRace(string reason)
     {
+        ForceEmitRaceEnd();
+
         var previousRaceId = _raceId;
         _raceId = System.Guid.NewGuid().ToString("N");
         _raceOrdinal++;
@@ -478,29 +480,29 @@ internal sealed class RaceStateProjector
         _raceEndEmitted = true;
 
         var ranked = _actorLapState.Values
-            .Where(p => p.LapTimesMs.Count >= ClassicRaceLapCount)
+            .Where(p => p.LapTimesMs.Count >= 1)
             .Select(p => new
             {
                 p.Actor,
                 p.Nick,
-                TotalMs = p.LapTimesMs.Take(ClassicRaceLapCount).Sum()
+                BestLapMs = p.LapTimesMs.Min()
             })
-            .OrderBy(p => p.TotalMs)
+            .OrderBy(p => p.BestLapMs)
             .ToList();
 
         if (ranked.Count > 0)
         {
             var winner = ranked[0];
             _appendRaceLine(
-                $"RACE_END participants={_raceParticipants.Count} completed={_raceParticipants.Count} winnerActor={winner.Actor} winnerNick=\"{winner.Nick}\" winnerTotalMs={winner.TotalMs} winnerTotalSec={ToSeconds(winner.TotalMs)}");
+                $"RACE_END participants={_raceParticipants.Count} completed={_raceParticipants.Count} winnerActor={winner.Actor} winnerNick=\"{winner.Nick}\" winnerTotalMs={winner.BestLapMs} winnerTotalSec={ToSeconds(winner.BestLapMs)}");
             _appendRaceEvent("race_end", new Dictionary<string, object?>
             {
                 ["participants"] = _raceParticipants.Count,
                 ["completed"] = _raceParticipants.Count,
                 ["winner_actor"] = winner.Actor,
                 ["winner_nick"] = winner.Nick,
-                ["winner_total_ms"] = winner.TotalMs,
-                ["winner_total_sec"] = Math.Round(winner.TotalMs / 1000d, 3)
+                ["winner_total_ms"] = winner.BestLapMs,
+                ["winner_total_sec"] = Math.Round(winner.BestLapMs / 1000d, 3)
             });
             return;
         }
@@ -510,6 +512,56 @@ internal sealed class RaceStateProjector
         {
             ["participants"] = _raceParticipants.Count,
             ["completed"] = _raceParticipants.Count
+        });
+    }
+
+    private void ForceEmitRaceEnd()
+    {
+        if (_raceEndEmitted)
+            return;
+
+        if (_raceParticipants.Count == 0 && _actorLapState.Count == 0)
+            return;
+
+        _raceEndEmitted = true;
+
+        var participantCount = _raceParticipants.Count;
+        // In a forced end (e.g. track change), treat all participants as completed
+        var completedCount = participantCount;
+
+        var ranked = _actorLapState.Values
+            .Where(p => p.LapTimesMs.Count >= 1)
+            .Select(p => new
+            {
+                p.Actor,
+                p.Nick,
+                BestLapMs = p.LapTimesMs.Min()
+            })
+            .OrderBy(p => p.BestLapMs)
+            .ToList();
+
+        if (ranked.Count > 0)
+        {
+            var winner = ranked[0];
+            _appendRaceLine(
+                $"RACE_END (forced) participants={participantCount} completed={completedCount} winnerActor={winner.Actor} winnerNick=\"{winner.Nick}\" winnerTotalMs={winner.BestLapMs} winnerTotalSec={ToSeconds(winner.BestLapMs)}");
+            _appendRaceEvent("race_end", new Dictionary<string, object?>
+            {
+                ["participants"] = participantCount,
+                ["completed"] = completedCount,
+                ["winner_actor"] = winner.Actor,
+                ["winner_nick"] = winner.Nick,
+                ["winner_total_ms"] = winner.BestLapMs,
+                ["winner_total_sec"] = Math.Round(winner.BestLapMs / 1000d, 3)
+            });
+            return;
+        }
+
+        _appendRaceLine($"RACE_END (forced) participants={participantCount} completed={completedCount}");
+        _appendRaceEvent("race_end", new Dictionary<string, object?>
+        {
+            ["participants"] = participantCount,
+            ["completed"] = completedCount
         });
     }
 
