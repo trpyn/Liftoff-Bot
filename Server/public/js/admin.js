@@ -859,18 +859,32 @@ async function loadCompRunnerState() {
     const label = document.getElementById('comp-runner-label');
     const detail = document.getElementById('comp-runner-detail');
     const autoLabel = document.getElementById('comp-runner-auto');
+    const toggleBtn = document.getElementById('btn-toggle-auto');
     if (state.running && state.current_week_id) {
       bar.className = 'runner-bar';
       label.textContent = `Week active (ID: ${state.current_week_id})`;
       detail.textContent = state.current_week_playlist ? `Playlist ${state.current_playlist_index + 1}/${state.playlist_count}` : '';
       autoLabel.textContent = state.auto_managed ? 'Auto-managed' : 'Manual';
+      toggleBtn.style.display = '';
+      toggleBtn.textContent = state.auto_managed ? 'Stop Auto' : 'Start Auto';
+      toggleBtn.className = state.auto_managed ? 'btn-danger mini-btn' : 'btn-secondary mini-btn';
     } else {
       bar.className = 'runner-bar stopped';
       label.textContent = 'No active competition week';
       detail.textContent = '';
       autoLabel.textContent = '';
+      toggleBtn.style.display = 'none';
     }
   } catch {}
+}
+
+async function toggleAutoManaged() {
+  try {
+    const state = await apiFetch('GET', '/api/admin/competition/runner/state');
+    await apiFetch('POST', '/api/admin/competition/runner/auto', { enabled: !state.auto_managed });
+    toast(state.auto_managed ? 'Auto-management stopped' : 'Auto-management started');
+    await loadCompRunnerState();
+  } catch (err) { toast(err.message, 'err'); }
 }
 
 // ── Init ───────────────────────────────────────────────────────────────────
@@ -933,6 +947,7 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('btn-save-week').addEventListener('click', saveWeekEdit);
   document.getElementById('btn-cancel-week-edit').addEventListener('click', cancelWeekEdit);
   document.getElementById('btn-delete-week').addEventListener('click', deleteWeek);
+  document.getElementById('btn-toggle-auto').addEventListener('click', toggleAutoManaged);
 
   document.getElementById('chat-msg-input').addEventListener('keydown', e => {
     if (e.key === 'Enter') sendChatNow();
