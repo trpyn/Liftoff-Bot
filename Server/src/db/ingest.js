@@ -129,6 +129,13 @@ function handleRaceEnd(event) {
     participants: event.participants || 0,
     completed: event.completed || 0,
   });
+
+  // Competition scoring — race_end fires before race_reset, so this is the
+  // reliable place to score a completed race. hasRaceResults() inside
+  // processRaceClose prevents double-scoring if race_reset also triggers it.
+  try { getProcessRaceClose()(event.race_id); } catch (err) {
+    console.error('[competition] Scoring error for race', event.race_id, err.message);
+  }
 }
 
 function handleTrackCatalog(event) {
