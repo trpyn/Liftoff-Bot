@@ -4,6 +4,8 @@ const { sendCommand, sendCommandAwait, getPluginSocket, setCurrentTrack, fireTem
 const broadcast = require('../broadcast');
 const db = require('../database');
 const playlist = require('../playlistRunner');
+const competitionRunner = require('../competitionRunner');
+const { recalculateWeek } = require('../competitionScoring');
 const { hashPassword, verifyPassword, createSession, getSession, destroySession, destroyUserSessions } = require('../auth');
 
 const router = Router();
@@ -423,6 +425,98 @@ router.post('/playlist/skip', (req, res) => {
 /** GET /api/admin/playlist/state */
 router.get('/playlist/state', (req, res) => {
   res.json(playlist.getState());
+});
+
+// ── Competition ─────────────────────────────────────────────────────────────
+
+/** POST /api/admin/competition  Body: { name } */
+router.post('/competition', (req, res) => {
+  const { name = '' } = req.body;
+  if (!name.trim()) return res.status(400).json({ error: 'name is required' });
+  res.status(201).json(db.createCompetition(name.trim()));
+});
+
+/** GET /api/admin/competitions */
+router.get('/competitions', (req, res) => {
+  res.json(db.getCompetitions());
+});
+
+/** POST /api/admin/competition/:id/archive */
+router.post('/competition/:id/archive', (req, res) => {
+  db.archiveCompetition(Number(req.params.id));
+  res.json({ ok: true });
+});
+
+/** POST /api/admin/competition/:id/weeks  Body: { count, start_date } */
+router.post('/competition/:id/weeks', (req, res) => {
+  const { count = 4, start_date } = req.body;
+  if (!start_date) return res.status(400).json({ error: 'start_date is required (ISO format)' });
+  const weeks = db.generateWeeks(Number(req.params.id), Number(count), start_date);
+  res.status(201).json(weeks);
+});
+
+/** GET /api/admin/competition/:id/weeks */
+router.get('/competition/:id/weeks', (req, res) => {
+  res.json(db.getWeeks(Number(req.params.id)));
+});
+
+/** PUT /api/admin/competition/week/:id  Body: { status } */
+router.put('/competition/week/:id', (req, res) => {
+  const { status } = req.body;
+  if (!['scheduled', 'active', 'finalised'].includes(status)) {
+    return res.status(400).json({ error: 'status must be scheduled, active, or finalised' });
+  }
+  db.updateWeekStatus(Number(req.params.id), status);
+  res.json({ ok: true });
+});
+
+/** GET /api/admin/competition/week/:id/playlists */
+router.get('/competition/week/:id/playlists', (req, res) => {
+  res.json(db.getWeekPlaylists(Number(req.params.id)));
+});
+
+/** POST /api/admin/competition/week/:id/playlists  Body: { playlist_id, interval_ms } */
+router.post('/competition/week/:id/playlists', (req, res) => {
+  const { playlist_id, interval_ms = 900000 } = req.body;
+  if (!playlist_id) return res.status(400).json({ error: 'playlist_id is required' });
+  const row = db.addWeekPlaylist(Number(req.params.id), Number(playlist_id), Number(interval_ms));
+  res.status(201).json(row);
+});
+
+/** DELETE /api/admin/competition/week/:weekId/playlists/:wpId */
+router.delete('/competition/week/:weekId/playlists/:wpId', (req, res) => {
+  db.removeWeekPlaylist(Number(req.params.wpId));
+  res.json({ ok: true });
+});
+
+/** POST /api/admin/competition/week/:weekId/playlists/:wpId/move  Body: { direction } */
+router.post('/competition/week/:weekId/playlists/:wpId/move', (req, res) => {
+  const { direction } = req.body;
+  if (!['up', 'down'].includes(direction)) return res.status(400).json({ error: 'direction must be up or down' });
+  db.moveWeekPlaylist(Number(req.params.wpId), direction);
+  res.json({ ok: true });
+});
+
+/** POST /api/admin/competition/recalculate/:weekId */
+router.post('/competition/recalculate/:weekId', strictLimiter, (req, res) => {
+  try {
+    const result = recalculateWeek(Number(req.params.weekId));
+    res.json(result);
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
+});
+
+/** GET /api/admin/competition/runner/state */
+router.get('/competition/runner/state', (req, res) => {
+  res.json(competitionRunner.getState());
+});
+
+/** POST /api/admin/competition/runner/auto  Body: { enabled } */
+router.post('/competition/runner/auto', (req, res) => {
+  const { enabled } = req.body;
+  competitionRunner.setAutoManaged(!!enabled);
+  res.json(competitionRunner.getState());
 });
 
 module.exports = router;

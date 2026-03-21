@@ -12,6 +12,7 @@
 
 let _broadcastPublic = null;
 let _broadcastAdmin = null;
+const _listeners = [];
 
 function init(pub, admin) {
   _broadcastPublic = pub;
@@ -29,6 +30,13 @@ function broadcastAdmin(msg) {
 function broadcastAll(msg) {
   broadcastPublic(msg);
   broadcastAdmin(msg);
+  for (const fn of _listeners) {
+    try { fn(msg); } catch (_) {}
+  }
 }
 
-module.exports = { init, broadcastPublic, broadcastAdmin, broadcastAll };
+function onBroadcast(fn) {
+  _listeners.push(fn);
+}
+
+module.exports = { init, broadcastPublic, broadcastAdmin, broadcastAll, onBroadcast };

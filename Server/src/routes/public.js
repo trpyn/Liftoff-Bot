@@ -123,4 +123,75 @@ router.get('/stats/overview', (req, res) => {
   res.json(db.getOverallStats());
 });
 
+// ── Competition (public) ────────────────────────────────────────────────────
+
+/**
+ * GET /api/competition/current
+ * Active competition + current week info.
+ */
+router.get('/competition/current', (req, res) => {
+  const comp = db.getActiveCompetition();
+  if (!comp) return res.json({ competition: null, current_week: null });
+  const weeks = db.getWeeks(comp.id);
+  const currentWeek = weeks.find(w => w.status === 'active') || null;
+  const nextWeek = weeks.find(w => w.status === 'scheduled') || null;
+  res.json({ competition: comp, current_week: currentWeek, next_week: nextWeek });
+});
+
+/**
+ * GET /api/competition/standings
+ * Current week standings.
+ */
+router.get('/competition/standings', (req, res) => {
+  const week = db.getActiveWeek();
+  if (!week) return res.json([]);
+  res.json(db.getWeeklyStandings(week.id));
+});
+
+/**
+ * GET /api/competition/standings/:weekId
+ * Standings for a specific week.
+ */
+router.get('/competition/standings/:weekId', (req, res) => {
+  res.json(db.getWeeklyStandings(Number(req.params.weekId)));
+});
+
+/**
+ * GET /api/competition/season
+ * Season-long aggregated standings for the active competition.
+ */
+router.get('/competition/season', (req, res) => {
+  const comp = db.getActiveCompetition();
+  if (!comp) return res.json([]);
+  res.json(db.getSeasonStandings(comp.id));
+});
+
+/**
+ * GET /api/competition/weeks
+ * All weeks for the active competition.
+ */
+router.get('/competition/weeks', (req, res) => {
+  const comp = db.getActiveCompetition();
+  if (!comp) return res.json([]);
+  res.json(db.getWeeks(comp.id));
+});
+
+/**
+ * GET /api/competition/pilot/:pilotKey
+ * Individual pilot's competition history.
+ */
+router.get('/competition/pilot/:pilotKey', (req, res) => {
+  const comp = db.getActiveCompetition();
+  if (!comp) return res.json({ weeklyStandings: [], recentResults: [] });
+  res.json(db.getPilotCompetitionHistory(comp.id, decodeURIComponent(req.params.pilotKey)));
+});
+
+/**
+ * GET /api/competition/race/:raceId/results
+ * Race results with points awarded.
+ */
+router.get('/competition/race/:raceId/results', (req, res) => {
+  res.json(db.getRaceResultsWithPoints(req.params.raceId));
+});
+
 module.exports = router;

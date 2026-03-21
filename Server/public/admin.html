@@ -372,6 +372,88 @@
     </div>
   </section>
 
+  <!-- Competition -->
+  <section>
+    <h2>Competition</h2>
+    <div class="section-body">
+
+      <!-- Runner status -->
+      <div id="comp-runner-bar" class="runner-bar stopped">
+        <span class="runner-label" id="comp-runner-label">No active competition</span>
+        <span class="runner-track" id="comp-runner-detail"></span>
+        <span class="runner-next" id="comp-runner-auto"></span>
+      </div>
+
+      <!-- Competition selector / creator -->
+      <div class="row">
+        <div>
+          <label>Active Competition</label>
+          <select id="comp-select">
+            <option value="">— None —</option>
+          </select>
+        </div>
+        <div style="display:flex;gap:0.5rem;align-items:end">
+          <div style="flex:1">
+            <label>New Competition</label>
+            <input type="text" id="comp-new-name" placeholder="e.g. Season 1">
+          </div>
+          <button class="btn-secondary mini-btn" id="btn-create-comp">+ Create</button>
+        </div>
+      </div>
+
+      <!-- Generate weeks -->
+      <div id="comp-weeks-section" style="display:none">
+        <div style="border-top:1px solid #1e1e24;padding-top:1rem;margin-top:0.5rem">
+          <label style="margin-bottom:0.6rem">Weeks</label>
+          <div class="row three" style="align-items:end">
+            <div>
+              <label>Start Date</label>
+              <input type="date" id="comp-week-start" style="width:100%">
+            </div>
+            <div>
+              <label>Number of Weeks</label>
+              <input type="number" id="comp-week-count" value="4" min="1" max="52" style="width:100%">
+            </div>
+            <div>
+              <button class="btn-secondary" id="btn-gen-weeks" style="width:100%">Generate Weeks</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Week list with playlist assignment -->
+        <div id="comp-week-list" style="margin-top:1rem"></div>
+      </div>
+
+      <!-- Week playlist assignment (shown when a week is selected) -->
+      <div id="comp-week-editor" style="display:none;border-top:1px solid #1e1e24;padding-top:1rem;margin-top:0.5rem">
+        <div style="display:flex;align-items:center;gap:0.75rem;margin-bottom:0.75rem;flex-wrap:wrap">
+          <span id="comp-week-title" style="font-weight:600;font-size:0.95rem;flex:1"></span>
+          <button class="btn-secondary mini-btn" id="btn-recalc-week">Recalculate</button>
+        </div>
+        <div>
+          <label>Assigned Playlists (run back-to-back, repeating all week)</label>
+          <div id="comp-week-playlists" style="margin-bottom:0.75rem"></div>
+          <div class="row" style="align-items:end">
+            <div>
+              <label>Add Playlist</label>
+              <select id="comp-wp-playlist-select">
+                <option value="">— Select —</option>
+              </select>
+            </div>
+            <div style="display:flex;gap:0.5rem;align-items:end">
+              <div>
+                <label>Interval (min)</label>
+                <input type="number" id="comp-wp-interval" value="15" min="1" style="width:80px">
+              </div>
+              <button class="btn-secondary mini-btn" id="btn-add-wp">+ Add</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
   <!-- Playlists -->
   <section>
     <h2>Playlists</h2>

@@ -8,6 +8,7 @@ const { createPluginSocketServer } = require('./pluginSocket');
 const { createLiveSocketServer } = require('./liveSocket');
 const broadcast = require('./broadcast');
 const playlistRunner = require('./playlistRunner');
+const competitionRunner = require('./competitionRunner');
 const adminRoutes = require('./routes/admin');
 const publicRoutes = require('./routes/public');
 
@@ -48,6 +49,12 @@ createPluginSocketServer(server);
 
 // Initialise playlist runner with combined broadcast function
 playlistRunner.init(broadcast.broadcastAll);
+
+// Start competition runner (week lifecycle + playlist calendar)
+competitionRunner.start();
+broadcast.onBroadcast((msg) => {
+  if (msg.event_type === 'playlist_state') competitionRunner.onPlaylistStateChange(msg);
+});
 
 // ── Start ────────────────────────────────────────────────────────────────────
 const PORT = process.env.PORT || 3000;

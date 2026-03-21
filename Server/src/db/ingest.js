@@ -1,5 +1,12 @@
 const { getDb } = require('./connection');
 
+// Lazy-loaded to avoid circular dependency (scoring → database → ingest → scoring)
+let _processRaceClose = null;
+function getProcessRaceClose() {
+  if (!_processRaceClose) _processRaceClose = require('../competitionScoring').processRaceClose;
+  return _processRaceClose;
+}
+
 function handleSessionStarted(event) {
   const db = getDb();
   const stmt = db.prepare(`
@@ -54,6 +61,11 @@ function handleRaceReset(event, currentTrack = {}) {
       participants,
       completed: participants,
     });
+
+    // Competition scoring — award points for this race if a competition week is active
+    try { getProcessRaceClose()(race.id); } catch (err) {
+      console.error('[competition] Scoring error for race', race.id, err.message);
+    }
   }
 
   const stmt = db.prepare(`

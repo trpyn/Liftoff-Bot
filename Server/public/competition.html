@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Competition · Liftoff</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      background: #0d0d0f;
+      color: #e0e0e0;
+      min-height: 100vh;
+    }
+
+    header {
+      background: #111318;
+      border-bottom: 2px solid #f97316;
+      padding: 1rem 2rem;
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+    header h1 { font-size: 1.4rem; color: #f97316; letter-spacing: 0.05em; }
+    header a {
+      font-size: 0.85rem; color: #888; text-decoration: none; transition: color 0.2s;
+    }
+    header a:hover { color: #f97316; }
+    .header-links { margin-left: auto; display: flex; gap: 1.25rem; }
+
+    main { max-width: 1100px; margin: 0 auto; padding: 2rem 1rem; display: grid; gap: 2rem; }
+
+    /* Competition banner */
+    .comp-banner {
+      background: linear-gradient(135deg, #1a1008 0%, #111318 100%);
+      border: 1px solid #f97316;
+      border-radius: 8px;
+      padding: 1.5rem 2rem;
+      display: flex;
+      align-items: center;
+      gap: 1.5rem;
+    }
+    .comp-banner-icon { font-size: 2rem; }
+    .comp-banner-title { font-size: 1.3rem; font-weight: 700; color: #f97316; }
+    .comp-banner-week { font-size: 0.9rem; color: #888; margin-top: 0.25rem; }
+    .comp-banner-progress { margin-left: auto; text-align: right; }
+    .comp-banner-days { font-size: 1.8rem; font-weight: 700; color: #f97316; font-variant-numeric: tabular-nums; }
+    .comp-banner-days-label { font-size: 0.75rem; color: #555; text-transform: uppercase; letter-spacing: 0.1em; }
+    .comp-inactive { text-align: center; color: #444; font-size: 1rem; padding: 2rem; }
+
+    section {
+      background: #111318;
+      border: 1px solid #222;
+      border-radius: 8px;
+      overflow: hidden;
+    }
+    section h2 {
+      padding: 0.75rem 1.25rem;
+      background: #16181f;
+      font-size: 0.85rem;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: #f97316;
+      border-bottom: 1px solid #222;
+    }
+
+    /* Week tabs */
+    .week-tabs {
+      display: flex;
+      gap: 0;
+      padding: 0 1rem;
+      background: #16181f;
+      border-bottom: 1px solid #222;
+      overflow-x: auto;
+    }
+    .week-tab {
+      padding: 0.6rem 1rem;
+      font-size: 0.8rem;
+      color: #666;
+      cursor: pointer;
+      border-bottom: 2px solid transparent;
+      white-space: nowrap;
+      transition: color 0.2s, border-color 0.2s;
+    }
+    .week-tab:hover { color: #e0e0e0; }
+    .week-tab.active { color: #f97316; border-bottom-color: #f97316; }
+    .week-tab .status-dot {
+      display: inline-block; width: 6px; height: 6px; border-radius: 50%;
+      margin-left: 0.4rem; vertical-align: middle;
+    }
+    .status-dot.active { background: #22c55e; }
+    .status-dot.finalised { background: #888; }
+    .status-dot.scheduled { background: #f97316; }
+
+    table { width: 100%; border-collapse: collapse; }
+    th {
+      padding: 0.6rem 1rem;
+      text-align: left;
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: #666;
+      border-bottom: 1px solid #1e1e24;
+    }
+    td {
+      padding: 0.65rem 1rem;
+      font-size: 0.9rem;
+      border-bottom: 1px solid #18181e;
+    }
+    tr:last-child td { border-bottom: none; }
+    tr:hover td { background: #16181f; }
+
+    .rank { color: #666; width: 2.5rem; font-weight: 600; }
+    .rank.gold   { color: #f59e0b; }
+    .rank.silver { color: #94a3b8; }
+    .rank.bronze { color: #b45309; }
+
+    .pilot-name { font-weight: 500; cursor: pointer; }
+    .pilot-name:hover { color: #f97316; text-decoration: underline; }
+    .pts { font-variant-numeric: tabular-nums; font-weight: 600; color: #f0f0f0; }
+    .pts-sub { font-variant-numeric: tabular-nums; color: #666; font-size: 0.85rem; }
+    .pts-highlight { color: #f97316; }
+
+    .empty { padding: 2rem; text-align: center; color: #444; font-size: 0.9rem; }
+
+    /* Award cards */
+    .awards-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 1rem;
+      padding: 1.25rem;
+    }
+    .award-card {
+      background: #0d0d0f;
+      border: 1px solid #222;
+      border-radius: 6px;
+      padding: 1rem;
+      text-align: center;
+    }
+    .award-card-icon { font-size: 1.5rem; margin-bottom: 0.5rem; }
+    .award-card-title { font-size: 0.75rem; text-transform: uppercase; color: #888; letter-spacing: 0.08em; margin-bottom: 0.5rem; }
+    .award-card-name { font-size: 0.95rem; font-weight: 600; color: #e0e0e0; }
+    .award-card-stat { font-size: 0.8rem; color: #666; margin-top: 0.25rem; }
+
+    /* Pilot detail panel */
+    .pilot-detail {
+      background: #0f1014;
+      border: 1px solid #1e1e24;
+      border-radius: 6px;
+      margin: 0 1rem 1rem;
+      padding: 1rem 1.25rem;
+      display: none;
+    }
+    .pilot-detail.open { display: block; }
+    .pilot-detail-header {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      margin-bottom: 1rem;
+    }
+    .pilot-detail-name { font-size: 1.1rem; font-weight: 700; color: #f97316; }
+    .pilot-detail-close { cursor: pointer; color: #666; font-size: 1.2rem; margin-left: auto; }
+    .pilot-detail-close:hover { color: #e0e0e0; }
+    .pilot-week-bars {
+      display: flex;
+      gap: 0.5rem;
+      align-items: flex-end;
+      height: 60px;
+      margin-bottom: 1rem;
+    }
+    .pilot-week-bar {
+      flex: 1;
+      background: #f97316;
+      border-radius: 2px 2px 0 0;
+      min-width: 20px;
+      position: relative;
+    }
+    .pilot-week-bar-label {
+      position: absolute;
+      bottom: -16px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 0.65rem;
+      color: #555;
+    }
+
+    .standings-update { animation: flashRow 1s ease-out; }
+    @keyframes flashRow {
+      0%   { background: rgba(249,115,22,0.25); }
+      100% { background: transparent; }
+    }
+
+    @media (max-width: 600px) {
+      .comp-banner { flex-direction: column; text-align: center; }
+      .comp-banner-progress { margin-left: 0; text-align: center; }
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <h1>Competition</h1>
+  <div class="header-links">
+    <a href="/">Live Race</a>
+    <a href="/stats.html">Stats</a>
+  </div>
+</header>
+
+<main>
+  <!-- Competition banner -->
+  <div id="comp-banner"></div>
+
+  <!-- Season Leaderboard -->
+  <section>
+    <h2>Season Standings</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Pilot</th>
+          <th>Total Pts</th>
+          <th>Weeks</th>
+          <th>Position</th>
+          <th>Laps</th>
+          <th>Consistency</th>
+          <th>Improved</th>
+          <th>Participation</th>
+        </tr>
+      </thead>
+      <tbody id="season-body">
+        <tr><td colspan="9" class="empty">No competition data yet.</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <!-- Weekly Standings -->
+  <section>
+    <h2>Weekly Standings</h2>
+    <div class="week-tabs" id="week-tabs"></div>
+    <table>
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Pilot</th>
+          <th>Total</th>
+          <th>Position</th>
+          <th>Laps</th>
+          <th>Consistency</th>
+          <th>Streak</th>
+          <th>Improved</th>
+          <th>Participation</th>
+        </tr>
+      </thead>
+      <tbody id="weekly-body">
+        <tr><td colspan="9" class="empty">Select a week above.</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <!-- Award highlights -->
+  <section>
+    <h2>Award Highlights</h2>
+    <div class="awards-grid" id="awards-grid">
+      <div class="empty" style="grid-column:1/-1">Awards will appear when the competition is active.</div>
+    </div>
+  </section>
+
+  <!-- Pilot detail panel -->
+  <div class="pilot-detail" id="pilot-detail">
+    <div class="pilot-detail-header">
+      <span class="pilot-detail-name" id="pilot-detail-name"></span>
+      <span class="pilot-detail-close" id="pilot-detail-close">&times;</span>
+    </div>
+    <div class="pilot-week-bars" id="pilot-week-bars"></div>
+    <table>
+      <thead>
+        <tr>
+          <th>Week</th>
+          <th>Rank</th>
+          <th>Total</th>
+          <th>Position</th>
+          <th>Laps</th>
+          <th>Consistency</th>
+          <th>Improved</th>
+          <th>Participation</th>
+        </tr>
+      </thead>
+      <tbody id="pilot-detail-body"></tbody>
+    </table>
+  </div>
+</main>
+
+<script src="/js/shared.js"></script>
+<script src="/js/competition.js"></script>
+</body>
+</html>
