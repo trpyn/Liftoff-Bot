@@ -308,7 +308,20 @@ function handlePluginEvent(jsonLine) {
     // Ignore all commands during the post-track-change cooldown window.
     if (!state.areChatCommandsAllowed()) return;
     if (msg === '/info') {
-      sendCommand({ cmd: 'send_chat', message: '<color=#00BFFF>COMMANDS</color> <color=#00FF00>/next</color> <color=#FFFF00>(skip)</color> <color=#00FF00>/extend</color> <color=#FFFF00>(+5 mins)</color> <color=#00FF00>/stay</color> <color=#FFFF00>(reset idle timer)</color>' });
+      const playlist = require('./playlistRunner');
+      const ps = playlist.getState();
+      let timeLeft = 'N/A';
+      if (ps.running && ps.next_change_at) {
+        const remainMs = new Date(ps.next_change_at).getTime() - Date.now();
+        if (remainMs > 0) {
+          const m = Math.floor(remainMs / 60000);
+          const s = Math.floor((remainMs % 60000) / 1000);
+          timeLeft = `${m}m ${s}s`;
+        } else {
+          timeLeft = '0m 0s';
+        }
+      }
+      sendCommand({ cmd: 'send_chat', message: `<color=#00BFFF>COMMANDS</color> <color=#00FF00>/next</color> <color=#FFFF00>(skip)</color> <color=#00FF00>/extend</color> <color=#FFFF00>(+5 mins)</color> | <color=#00BFFF>Time left:</color> <color=#FFFF00>${timeLeft}</color>` });
     } else if (msg === '/next') {
       // Use user_id (Steam ID) as the voter key — event.actor can be null if the
       // plugin couldn't resolve the Photon actor number, which causes all unresolved
