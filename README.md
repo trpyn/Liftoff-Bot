@@ -121,14 +121,16 @@ Liftoff Competition transforms a standard Liftoff multiplayer session into a str
 
 - Browser-based control panel for event organisers
 - Multi-user authentication — each admin has their own username and password
-- Player management with kick controls, per-player idle time display, and whitelist toggle
-- Track catalog browsing and selection
-- Playlist creation, management, and execution
-- **Competition management** — create seasons, generate weeks, assign playlists to weeks, recalculate points
-- **Competition runner status** — view and toggle auto-managed playlist rotation
-- Live chat monitoring
-- Manual and automated chat messaging
-- Race monitoring and session overview
+- Real-time player monitoring with kick controls, idle time display, and whitelist toggle
+- Track catalog browsing, selection, and manual track control
+- Playlist creation, management, and automated rotation with configurable intervals
+- Automated chat templates triggered by track changes, race starts, and race ends
+- **Competition management** — create seasons, generate weeks, assign playlist calendars, recalculate points
+- **Competition runner** — automatic week lifecycle, playlist rotation, and reboot-resilient state recovery
+- Live chat log and manual messaging into the game
+- Persistent WebSocket connection for real-time status updates across all sections
+
+> For a detailed breakdown of every dashboard section, all API endpoints, WebSocket events, and how the playlist and competition runners work, see **[admin-dashboard.md](admin-dashboard.md)**.
 
 ### Chat System
 - View in-game chat live in the admin panel
