@@ -97,6 +97,8 @@ Liftoff Competition transforms a standard Liftoff multiplayer session into a str
 - **Participation** — 10/20/30 points for flying on 3/5/7 days; 5 bonus points for 3+ different tracks
 - Anti-gaming: minimum 2 laps to qualify, solo pilots get no position points, 2 participants = half points
 
+> For the full points breakdown, scoring formulas, consistency calculation method, award categories, and everything shown on the competition page, see **[Competition.md](Competition.md)**.
+
 ### Competition Page
 
 - Dedicated `/competition.html` page with season and weekly league tables
